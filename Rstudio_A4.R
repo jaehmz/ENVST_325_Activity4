@@ -123,9 +123,19 @@ weather = weather %>%
   mutate(VoltFlag = ifelse(BatVolt < 8500, "Warning", "Normal"))
 
 # Prompt 3
+SolRadCheck <- function(AirTemp, SolRad) {
+  flag <- rep("Valid", length(AirTemp))
+  temp_problem <- AirTemp < -40 | AirTemp > 45
+  rad_problem  <- SolRad < 0 | SolRad > 1400
+  flag[temp_problem | rad_problem] <- "OutOfRange"
+  return(flag)
+}
 
+weather <- weather %>%
+  mutate(DataQuality = SolRadCheck(AirTemp, SolRad))
 
 # Prompt 4
+
 
 
 
