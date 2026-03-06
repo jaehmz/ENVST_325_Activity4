@@ -76,14 +76,56 @@ weather$airMA <- airMA
 
 # In class prompts ----
 # Prompt 1 (done in class)
-# airMA <- numeric()
+airMA <- numeric()
 
-#for(i in 8:length(weather$AirTemp)){
-  #airMA[i] <- mean(weather$AirTemp[(i-7):i])
-#}
+for(i in 8:length(weather$AirTemp)){
+  airMA[i] <- mean(weather$AirTemp[(i-7):i])
+}
+
+weather$airMA = airMA
+
+ggplot(data = weather, aes(x = Date)) +
+  geom_line(aes(y = AirTemp), color = "blue", linewidth = 1) +
+  geom_line(aes(y = airMA), color = "red", linewidth = 1) +
+  labs(
+    title = "Air Temperature and 2-Hour Rolling Average",
+    subtitle = "January 2022",
+    x = "Date",
+    y = "Air Temperature (°C)"
+  )
 
 # Prompt 2
 # graphing solar radiation
 
-SolRad <- weather$SolRad
-ggplot(data = weather$SolRad)
+SolRad <- weather %>%
+  mutate(Date = mdy_hm(Date)) %>%
+  filter(Date >= mdy_hm("4/1/21 0:00") & Date <= mdy_hm("7/27/21 23:45"))
+
+ggplot(SolRad, aes(x = Date, y = SolRad)) +
+  geom_line(color = "orange2") +
+  labs(
+    title = "Solar Radiation Levels (April–July 2021)",
+    subtitle = "Assessing for sensor buildup/accumulation",
+    x = "Date",
+    y = "Solar Radiation"
+  )
+
+# Prompt 3
+
+# Talked about this in class
+
+# Homework ----
+# Prompt 1
+sum(is.na(weather$Precip))
+
+# Prompt 2
+weather = weather %>%
+  mutate(VoltFlag = ifelse(BatVolt < 8500, "Warning", "Normal"))
+
+# Prompt 3
+
+
+# Prompt 4
+
+
+
