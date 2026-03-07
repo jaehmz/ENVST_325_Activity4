@@ -136,6 +136,16 @@ weather <- weather %>%
 
 # Prompt 4
 
+weather$Date <- mdy_hm(weather$Date)
 
-
+AirTempQ1 <- weather %>%
+  filter(Date >= mdy_hm("1/1/21 0:00") & Date <= mdy_hm("3/31/21 23:46"))
+ggplot(data = AirTempQ1, aes(x = Date, y = AirTemp)) +
+  geom_line(color = "blue") +
+  labs(
+    title = "Winter Air Temperatures (Jan - Mar 2021)",
+    subtitle = "Checking for persistence (snow accumulation) issues",
+    x = "Date",
+    y = "Air Temperature (°C)"
+  )
 
