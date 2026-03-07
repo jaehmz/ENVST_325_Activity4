@@ -116,13 +116,17 @@ ggplot(SolRad, aes(x = Date, y = SolRad)) +
 
 # Homework ----
 # Prompt 1
+# getting a count of the NA
 sum(is.na(weather$Precip))
 
 # Prompt 2
+# battery voltage flag, warning if below 8500, normal if above
 weather = weather %>%
   mutate(VoltFlag = ifelse(BatVolt < 8500, "Warning", "Normal"))
 
 # Prompt 3
+# function that checks air temperature and solar radiation values
+# checks for unrealistic ranges and flags them as "OutOfRange" otherwise label as "Valid"
 SolRadCheck <- function(AirTemp, SolRad) {
   flag <- rep("Valid", length(AirTemp))
   temp_problem <- AirTemp < -40 | AirTemp > 45
@@ -130,22 +134,56 @@ SolRadCheck <- function(AirTemp, SolRad) {
   flag[temp_problem | rad_problem] <- "OutOfRange"
   return(flag)
 }
-
+# apply to dataset to check each observation
 weather <- weather %>%
   mutate(DataQuality = SolRadCheck(AirTemp, SolRad))
 
 # Prompt 4
-
+# Convert the Date column to date time
 weather$Date <- mdy_hm(weather$Date)
-
+# include only observations from January 1 to March 31, 2021
 AirTempQ1 <- weather %>%
   filter(Date >= mdy_hm("1/1/21 0:00") & Date <= mdy_hm("3/31/21 23:46"))
+# making the plot for the Q1 air temps
 ggplot(data = AirTempQ1, aes(x = Date, y = AirTemp)) +
   geom_line(color = "blue") +
   labs(
-    title = "Winter Air Temperatures (Jan - Mar 2021)",
-    subtitle = "Checking for persistence (snow accumulation) issues",
+    title = "Winter Air Temperatures Showing Possible Accumulation Issues (Jan–Mar 2021)",
     x = "Date",
     y = "Air Temperature (°C)"
+  ) +
+  theme_classic()
+
+# Prompt 5
+# Create a date-only column and convert air temperature to Fahrenheit
+weather <- weather %>%
+  mutate(
+    Day = as.Date(Date),
+    Temp_F = (AirTemp * 9/5) + 32
   )
 
+# Calculate total precipitation per day and the minimum temperature for that day
+DailySum <- weather %>%
+  group_by(Day) %>%
+  summarize(
+    DailyPrecip = sum(Precip, na.rm = TRUE),
+    MinTempDay = min(Temp_F, na.rm = TRUE)
+  )
+# include the end of February through April 2021
+SpringData <- DailySum %>%
+  filter(Day >= as.Date("2021-02-28") & Day <= as.Date("2021-04-30"))
+
+# for loop to set precipitation to NA if the minimum temperature
+# for that day or the previous day was below 35°F
+for(i in 2:nrow(SpringData)) {
+  if(SpringData$MinTempDay[i] < 35 | SpringData$MinTempDay[i-1] < 35) {
+    SpringData$DailyPrecip[i] <- NA
+  }
+}
+
+# Remove the extra February day so only March and April remain
+FinalSpring <- SpringData %>%
+  filter(Day >= as.Date("2021-03-01"))
+
+# Count the number of days with valid precipitation observations
+sum(!is.na(FinalSpring$DailyPrecip))
