@@ -187,3 +187,31 @@ FinalSpring <- SpringData %>%
 
 # Count the number of days with valid precipitation observations
 sum(!is.na(FinalSpring$DailyPrecip))
+
+# Prompt 6
+# reading in the soil temp data
+soilTemp = list.files("/cloud/project/activity04/soil")
+# storing the soil data
+soilData = list()
+
+# Use a for loop to read each soil file into the list
+for(i in 1:length(soilTemp)){
+  soilData[[i]] = read.csv(paste0("/cloud/project/activity04/soil/", soilTemp[i]))
+}
+
+# Combine all soil datasets into one dataframe
+SoilCombined = do.call("rbind", soilData)
+# changing into a date time frame instead of the timestamp
+SoilCombined$DateTime = ymd_hm(SoilCombined$Timestamp)
+
+# checking if time intervals differ from an expected interval
+timeIntervalCheck = function(timeVec, expected_interval){
+  time_ranges = timeVec[-length(timeVec)] %--% timeVec[-1]
+  time_seconds = int_length(time_ranges)
+  return(time_ranges[time_seconds != expected_interval])
+}
+# Check for clock issues
+soilClockIssues = timeIntervalCheck(SoilCombined$DateTime, 3600)
+print(soilClockIssues)
+
+# Prompt 7
